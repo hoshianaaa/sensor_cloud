@@ -1,0 +1,67 @@
+/* This example shows how to use continuous mode to take
+  range measurements with the VL53L0X. It is based on
+  vl53l0x_ContinuousRanging_Example.c from the VL53L0X API.
+
+  The range readings are in units of mm. */
+
+#include <Wire.h>
+#include <VL53L0X.h>
+
+#define DEBUG 0
+
+VL53L0X sensor;
+
+void setup()
+{
+  Serial.begin(9600);
+  pinMode(13, OUTPUT);
+  digitalWrite(13, LOW);
+  Wire.begin();
+
+  sensor.init();
+  sensor.setTimeout(1000);
+  sensor.setSignalRateLimit(0.1);
+  // increase laser pulse periods (defaults are 14 and 10 PCLKs)
+  sensor.setVcselPulsePeriod(VL53L0X::VcselPeriodPreRange, 18);
+  sensor.setVcselPulsePeriod(VL53L0X::VcselPeriodFinalRange, 14);
+
+  // Start continuous back-to-back mode (take readings as
+  // fast as possible).  To use continuous timed mode
+  // instead, provide a desired inter-measurement period in
+  // ms (e.g. sensor.startContinuous(100)).
+  sensor.startContinuous();
+}
+
+void loop()
+{
+  short int val = 0;
+  val = sensor.readRangeContinuousMillimeters();
+  if (sensor.timeoutOccurred())digitalWrite(13, HIGH);
+
+  if (DEBUG == 0) {
+    Serial.write(highByte(val));
+    Serial.write(lowByte(val));
+  }
+
+  if (DEBUG == 1) {
+    short int a;
+    Serial.print(highByte(val));
+    Serial.print("  ");
+    Serial.print(lowByte(val));
+    Serial.print("  ");
+    Serial.print(val);
+
+    a = highByte(val) * 256;
+    a += lowByte(val);
+
+    Serial.print("  ");
+    Serial.println(a);
+
+  }
+
+
+
+  delay(10000);
+
+  //Serial.println();
+}
